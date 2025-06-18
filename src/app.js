@@ -6,6 +6,8 @@ import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './swagger/swaggerConfig.js';
 import productRoutes from './routes/product.routes.js';
 import categoryRoutes from './routes/category.routes.js';
+import OrderRoutes from './routes/order.routes.js';
+import UserRoutes from './routes/user.routes.js';
 
 const app = express();
 
@@ -20,6 +22,8 @@ app.use(cors());
 app.use(express.json());
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/product-orders', OrderRoutes);
+app.use('/api/user', UserRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 export default app;

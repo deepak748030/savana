@@ -8,7 +8,7 @@ export const createCategory = async (req, res) => {
         if (!title) return sendResponse(res, 400, false, 'Title is required');
 
         const slug = slugify(title.toLowerCase());
-        const image = req.file ? `/uploads/categories/${req.file.filename}` : '';
+        const image = req.file ? `/uploads/${req.file.filename}` : '';
 
         const category = await Category.create({ title, slug, image });
         return sendResponse(res, 201, true, 'Category created', category);
@@ -41,7 +41,7 @@ export const updateCategory = async (req, res) => {
         if (title) category.slug = slugify(title.toLowerCase());
 
         if (req.file) {
-            category.image = `/uploads/categories/${req.file.filename}`;
+            category.image = `/uploads/${req.file.filename}`;
         }
 
         await category.save();

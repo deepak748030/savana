@@ -1,13 +1,19 @@
 import User from '../models/user.model.js';
 import { sendResponse } from '../utils/sendResponse.js';
 
-// Create a new user
+// Create a new user with avatar image
 export const createUser = async (req, res) => {
     try {
-        const user = await User.create(req.body);
-        sendResponse(res, 201, 'User created successfully', user);
+        const avatar = req.file ? `/uploads/${req.file.filename}` : null;
+        const userData = {
+            ...req.body,
+            avatar
+        };
+
+        const user = await User.create(userData);
+        return sendResponse(res, 201, true, 'User created successfully', user);
     } catch (error) {
-        sendResponse(res, 500, 'Error creating user', error.message);
+        return sendResponse(res, 500, false, 'Error creating user', error.message);
     }
 };
 
@@ -15,27 +21,34 @@ export const createUser = async (req, res) => {
 export const getAllUsers = async (req, res) => {
     try {
         const users = await User.find();
-        sendResponse(res, 200, 'All users fetched successfully', users);
+        return sendResponse(res, 200, true, 'All users fetched successfully', users);
     } catch (error) {
-        sendResponse(res, 500, 'Error fetching users', error.message);
+        return sendResponse(res, 500, false, 'Error fetching users', error.message);
     }
 };
 
-
+// Update user with optional new avatar
 export const updateUser = async (req, res) => {
     try {
         const { id } = req.params;
-        const updated = await User.findByIdAndUpdate(id, req.body, {
+        const avatar = req.file ? `/uploads/${req.file.filename}` : undefined;
+
+        const updatedData = {
+            ...req.body,
+            ...(avatar && { avatar }) // Only include if a new file is uploaded
+        };
+
+        const updated = await User.findByIdAndUpdate(id, updatedData, {
             new: true,
             runValidators: true
         });
 
         if (!updated) {
-            return sendResponse(res, 404, 'User not found');
+            return sendResponse(res, 404, false, 'User not found');
         }
 
-        sendResponse(res, 200, 'User updated successfully', updated);
+        return sendResponse(res, 200, true, 'User updated successfully', updated);
     } catch (error) {
-        sendResponse(res, 500, 'Error updating user', error.message);
+        return sendResponse(res, 500, false, 'Error updating user', error.message);
     }
 };

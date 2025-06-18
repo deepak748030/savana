@@ -17,7 +17,7 @@ export const createProduct = async (req, res) => {
             return sendResponse(res, 400, false, 'Missing required fields');
         }
 
-        const images = req.files?.map(file => `/uploads/products/${file.filename}`) || [];
+        const images = req.files?.map(file => `/uploads/${file.filename}`) || [];
 
         const product = await Product.create({
             title,
@@ -56,7 +56,7 @@ export const updateProduct = async (req, res) => {
         if (!product) return sendResponse(res, 404, false, 'Product not found');
 
         if (req.files?.length > 0) {
-            product.images = req.files.map(file => `/uploads/products/${file.filename}`);
+            product.images = req.files.map(file => `/uploads/${file.filename}`);
         }
 
         Object.keys(updates).forEach(key => {

@@ -1,17 +1,15 @@
 import express from 'express';
-import {
-    createUser,
-    getAllUsers,
-    updateUser
-} from '../controllers/user.controller.js';
+import upload from '../utils/multer.js'; // Ensure this stores in `/uploads/users/`
+import { createUser, getAllUsers, updateUser } from '../controllers/user.controller.js';
 
 const router = express.Router();
 
-router.post('/', createUser);
+router.post('/', upload.single('avatar'), createUser);
 router.get('/', getAllUsers);
-router.put('/:id', updateUser);
+router.put('/:id', upload.single('avatar'), updateUser);
 
 export default router;
+
 
 /**
  * @swagger

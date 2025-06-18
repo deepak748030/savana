@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import morgan from 'morgan';
 import { fileURLToPath } from 'url';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './swagger/swaggerConfig.js';
@@ -17,13 +18,13 @@ const __dirname = path.dirname(__filename);
 
 // Static folder to expose /uploads
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-
+app.use(morgan('dev')); // Logging middleware
 app.use(cors());
 app.use(express.json());
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/product-orders', OrderRoutes);
-app.use('/api/user', UserRoutes);
+app.use('/api/users', UserRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 export default app;

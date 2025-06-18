@@ -9,6 +9,7 @@ import productRoutes from './routes/product.routes.js';
 import categoryRoutes from './routes/category.routes.js';
 import OrderRoutes from './routes/order.routes.js';
 import UserRoutes from './routes/user.routes.js';
+import ProductVariantRoutes from './routes/productVariant.route.js'
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/product-orders', OrderRoutes);
 app.use('/api/users', UserRoutes);
+app.use('/api/product-variants', ProductVariantRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 export default app;

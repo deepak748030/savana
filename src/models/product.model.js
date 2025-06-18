@@ -6,13 +6,16 @@ const productSchema = new mongoose.Schema({
     images: [{ type: String }],
     amount: { type: Number, required: true },
     discountedAmount: { type: Number },
+    stockCount: { type: Number, required: true, default: 0 }, // ✅ stock quantity field
+
+    inStock: { type: Boolean, default: true }, // can be controlled via logic in controller
+    fastDelivery: { type: Boolean, default: false },
+
     category: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Category',
         required: true
-    },
-    inStock: { type: Boolean, default: true },
-    fastDelivery: { type: Boolean, default: false }  // ✅ added this field
+    }
 }, { timestamps: true });
 
 export default mongoose.model('Product', productSchema);

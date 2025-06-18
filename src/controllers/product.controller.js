@@ -1,6 +1,7 @@
 import Product from '../models/product.model.js';
 import { sendResponse } from '../utils/sendResponse.js';
 
+// Create a product
 export const createProduct = async (req, res) => {
     try {
         const {
@@ -10,7 +11,8 @@ export const createProduct = async (req, res) => {
             discountedAmount,
             category,
             inStock,
-            fastDelivery = false // ✅ default to false
+            fastDelivery = false,
+            stockCount = 0
         } = req.body;
 
         if (!title || !amount || !category) {
@@ -25,8 +27,9 @@ export const createProduct = async (req, res) => {
             amount,
             discountedAmount,
             category,
-            inStock,
-            fastDelivery,
+            stockCount: Number(stockCount),
+            inStock: inStock === 'true' || inStock === true || Number(stockCount) > 0,
+            fastDelivery: fastDelivery === 'true' || fastDelivery === true,
             images
         });
 
@@ -37,6 +40,7 @@ export const createProduct = async (req, res) => {
     }
 };
 
+// Get all products
 export const getAllProducts = async (req, res) => {
     try {
         const products = await Product.find().populate('category');
@@ -47,6 +51,7 @@ export const getAllProducts = async (req, res) => {
     }
 };
 
+// Update a product
 export const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
@@ -59,14 +64,19 @@ export const updateProduct = async (req, res) => {
             product.images = req.files.map(file => `/uploads/${file.filename}`);
         }
 
+        // Update fields safely
         Object.keys(updates).forEach(key => {
-            product[key] = updates[key];
+            if (key === 'stockCount') {
+                product.stockCount = Number(updates[key]);
+                product.inStock = product.stockCount > 0;
+            } else if (key === 'inStock') {
+                product.inStock = updates.inStock === 'true' || updates.inStock === true;
+            } else if (key === 'fastDelivery') {
+                product.fastDelivery = updates.fastDelivery === 'true' || updates.fastDelivery === true;
+            } else {
+                product[key] = updates[key];
+            }
         });
-
-        // ✅ Handle explicit boolean conversion for fastDelivery
-        if ('fastDelivery' in updates) {
-            product.fastDelivery = updates.fastDelivery === 'true' || updates.fastDelivery === true;
-        }
 
         await product.save();
         return sendResponse(res, 200, true, 'Product updated', product);
@@ -76,6 +86,7 @@ export const updateProduct = async (req, res) => {
     }
 };
 
+// Delete product
 export const deleteProduct = async (req, res) => {
     try {
         const { id } = req.params;
@@ -88,7 +99,7 @@ export const deleteProduct = async (req, res) => {
     }
 };
 
-// GET /api/products/search?query=phone
+// Search by title
 export const searchProducts = async (req, res) => {
     try {
         const { query } = req.query;
@@ -105,12 +116,11 @@ export const searchProducts = async (req, res) => {
     }
 };
 
-// GET /api/products/category/:categoryId
+// Get by category
 export const getProductsByCategory = async (req, res) => {
     try {
         const { categoryId } = req.params;
         const products = await Product.find({ category: categoryId }).populate('category');
-
         return sendResponse(res, 200, true, 'Products by category', products);
     } catch (err) {
         console.error(err);

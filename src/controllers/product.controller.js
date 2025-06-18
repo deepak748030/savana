@@ -3,7 +3,15 @@ import { sendResponse } from '../utils/sendResponse.js';
 
 export const createProduct = async (req, res) => {
     try {
-        const { title, description, amount, discountedAmount, category, inStock } = req.body;
+        const {
+            title,
+            description,
+            amount,
+            discountedAmount,
+            category,
+            inStock,
+            fastDelivery = false // ✅ default to false
+        } = req.body;
 
         if (!title || !amount || !category) {
             return sendResponse(res, 400, false, 'Missing required fields');
@@ -18,6 +26,7 @@ export const createProduct = async (req, res) => {
             discountedAmount,
             category,
             inStock,
+            fastDelivery,
             images
         });
 
@@ -53,6 +62,11 @@ export const updateProduct = async (req, res) => {
         Object.keys(updates).forEach(key => {
             product[key] = updates[key];
         });
+
+        // ✅ Handle explicit boolean conversion for fastDelivery
+        if ('fastDelivery' in updates) {
+            product.fastDelivery = updates.fastDelivery === 'true' || updates.fastDelivery === true;
+        }
 
         await product.save();
         return sendResponse(res, 200, true, 'Product updated', product);

@@ -11,7 +11,8 @@ const productSchema = new mongoose.Schema({
         ref: 'Category',
         required: true
     },
-    inStock: { type: Boolean, default: true }
+    inStock: { type: Boolean, default: true },
+    fastDelivery: { type: Boolean, default: false }  // ✅ added this field
 }, { timestamps: true });
 
 export default mongoose.model('Product', productSchema);

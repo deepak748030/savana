@@ -11,13 +11,12 @@ import {
 
 const router = express.Router();
 
-router.post('/', upload.array('images', 5), createProduct); // max 5 images
+router.post('/', upload.array('images', 5), createProduct);
 router.get('/', getAllProducts);
 router.put('/:id', upload.array('images', 5), updateProduct);
 router.delete('/:id', deleteProduct);
-router.get('/search', searchProducts); // 🔍 /api/products/search?query=apple
-router.get('/category/:categoryId', getProductsByCategory); // 📦 /api/products/category/<id>
-
+router.get('/search', searchProducts);
+router.get('/category/:categoryId', getProductsByCategory);
 
 export default router;
 
@@ -54,6 +53,12 @@ export default router;
  *               category:
  *                 type: string
  *                 description: MongoDB category ObjectId
+ *               inStock:
+ *                 type: boolean
+ *                 default: true
+ *               fastDelivery:
+ *                 type: boolean
+ *                 default: false
  *               images:
  *                 type: array
  *                 items:
@@ -61,7 +66,7 @@ export default router;
  *                   format: binary
  *     responses:
  *       201:
- *         description: Product created
+ *         description: Product created successfully
  */
 
 /**
@@ -87,7 +92,7 @@ export default router;
  *       - in: path
  *         name: id
  *         required: true
- *         description: The product ID
+ *         description: Product ID
  *         schema:
  *           type: string
  *     requestBody:
@@ -107,6 +112,10 @@ export default router;
  *                 type: number
  *               category:
  *                 type: string
+ *               inStock:
+ *                 type: boolean
+ *               fastDelivery:
+ *                 type: boolean
  *               images:
  *                 type: array
  *                 items:
@@ -129,11 +138,12 @@ export default router;
  *         required: true
  *         schema:
  *           type: string
- *         description: The product ID
+ *         description: Product ID
  *     responses:
  *       200:
  *         description: Product deleted
  */
+
 /**
  * @swagger
  * /api/products/search:
@@ -164,8 +174,8 @@ export default router;
  *         required: true
  *         schema:
  *           type: string
- *         description: MongoDB ObjectId of the category
+ *         description: MongoDB category ID
  *     responses:
  *       200:
- *         description: List of products in the category
+ *         description: Products in the given category
  */

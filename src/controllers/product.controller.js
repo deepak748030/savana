@@ -127,3 +127,20 @@ export const getProductsByCategory = async (req, res) => {
         return sendResponse(res, 500, false, 'Server Error');
     }
 };
+
+// Get single product by ID
+export const getProductById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const product = await Product.findById(id).populate('category');
+
+        if (!product) {
+            return sendResponse(res, 404, false, 'Product not found');
+        }
+
+        return sendResponse(res, 200, true, 'Product fetched successfully', product);
+    } catch (err) {
+        console.error(err);
+        return sendResponse(res, 500, false, 'Server Error');
+    }
+};

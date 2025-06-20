@@ -6,13 +6,15 @@ import {
     updateProduct,
     deleteProduct,
     searchProducts,
-    getProductsByCategory
+    getProductsByCategory,
+    getProductById
 } from '../controllers/product.controller.js';
 
 const router = express.Router();
 
 router.post('/', upload.array('images', 5), createProduct);
 router.get('/', getAllProducts);
+router.get('/:id', getProductById);
 router.put('/:id', upload.array('images', 5), updateProduct);
 router.delete('/:id', deleteProduct);
 router.get('/search', searchProducts);
@@ -79,6 +81,27 @@ export default router;
  *       200:
  *         description: List of all products
  */
+
+/**
+ * @swagger
+ * /api/products/{id}:
+ *   get:
+ *     summary: Get a single product by ID
+ *     tags: [Product]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         description: The product ID
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Product details
+ *       404:
+ *         description: Product not found
+ */
+
 
 /**
  * @swagger

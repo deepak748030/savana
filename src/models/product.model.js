@@ -6,10 +6,20 @@ const productSchema = new mongoose.Schema({
     images: [{ type: String }],
     amount: { type: Number, required: true },
     discountedAmount: { type: Number },
-    stockCount: { type: Number, required: true, default: 0 }, // ✅ stock quantity field
-
-    inStock: { type: Boolean, default: true }, // can be controlled via logic in controller
+    stockCount: { type: Number, required: true, default: 0 },
+    inStock: { type: Boolean, default: true },
     fastDelivery: { type: Boolean, default: false },
+
+    sizes: [{ type: String }], // ✅ sizes like XS, S, M, L, XL
+
+    productInfo: [
+        {
+            title: { type: String, required: true },
+            content: { type: String, required: true }
+        }
+    ], // ✅ structured product details
+
+    tag: { type: String }, // ✅ Added tag field (e.g. "bestseller", "new", etc.)
 
     category: {
         type: mongoose.Schema.Types.ObjectId,

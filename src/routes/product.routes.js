@@ -55,12 +55,31 @@ export default router;
  *               category:
  *                 type: string
  *                 description: MongoDB category ObjectId
+ *               stockCount:
+ *                 type: number
  *               inStock:
  *                 type: boolean
- *                 default: true
  *               fastDelivery:
  *                 type: boolean
- *                 default: false
+ *               tag:
+ *                 type: string
+ *                 example: "bestseller"
+ *               sizes:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   example: "M"
+ *               productInfo:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     title:
+ *                       type: string
+ *                       example: Fabric
+ *                     content:
+ *                       type: string
+ *                       example: Flat Jersey
  *               images:
  *                 type: array
  *                 items:
@@ -92,16 +111,15 @@ export default router;
  *       - in: path
  *         name: id
  *         required: true
- *         description: The product ID
  *         schema:
  *           type: string
+ *         description: The product ID
  *     responses:
  *       200:
  *         description: Product details
  *       404:
  *         description: Product not found
  */
-
 
 /**
  * @swagger
@@ -115,9 +133,9 @@ export default router;
  *       - in: path
  *         name: id
  *         required: true
- *         description: Product ID
  *         schema:
  *           type: string
+ *         description: Product ID
  *     requestBody:
  *       required: false
  *       content:
@@ -135,10 +153,27 @@ export default router;
  *                 type: number
  *               category:
  *                 type: string
+ *               stockCount:
+ *                 type: number
  *               inStock:
  *                 type: boolean
  *               fastDelivery:
  *                 type: boolean
+ *               tag:
+ *                 type: string
+ *               sizes:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               productInfo:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     title:
+ *                       type: string
+ *                     content:
+ *                       type: string
  *               images:
  *                 type: array
  *                 items:

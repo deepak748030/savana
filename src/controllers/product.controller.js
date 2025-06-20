@@ -1,7 +1,7 @@
 import Product from '../models/product.model.js';
 import { sendResponse } from '../utils/sendResponse.js';
 
-// Create a product
+// ✅ Create a product
 export const createProduct = async (req, res) => {
     try {
         const {
@@ -12,7 +12,10 @@ export const createProduct = async (req, res) => {
             category,
             inStock,
             fastDelivery = false,
-            stockCount = 0
+            stockCount = 0,
+            sizes,
+            productInfo,
+            tag
         } = req.body;
 
         if (!title || !amount || !category) {
@@ -30,28 +33,31 @@ export const createProduct = async (req, res) => {
             stockCount: Number(stockCount),
             inStock: inStock === 'true' || inStock === true || Number(stockCount) > 0,
             fastDelivery: fastDelivery === 'true' || fastDelivery === true,
+            sizes: typeof sizes === 'string' ? sizes.split(',') : sizes,
+            productInfo: typeof productInfo === 'string' ? JSON.parse(productInfo) : productInfo,
+            tag,
             images
         });
 
         return sendResponse(res, 201, true, 'Product created successfully', product);
     } catch (err) {
         console.error(err);
-        return sendResponse(res, 500, false, 'Server Error');
+        return sendResponse(res, 500, false, 'Server Error', err.message);
     }
 };
 
-// Get all products
+// ✅ Get all products
 export const getAllProducts = async (req, res) => {
     try {
         const products = await Product.find().populate('category');
-        return sendResponse(res, 200, true, 'Products fetched', products);
+        return sendResponse(res, 200, true, 'Products fetched successfully', products);
     } catch (err) {
         console.error(err);
-        return sendResponse(res, 500, false, 'Server Error');
+        return sendResponse(res, 500, false, 'Server Error', err.message);
     }
 };
 
-// Update a product
+// ✅ Update a product
 export const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
@@ -64,46 +70,49 @@ export const updateProduct = async (req, res) => {
             product.images = req.files.map(file => `/uploads/${file.filename}`);
         }
 
-        // Update fields safely
-        Object.keys(updates).forEach(key => {
+        Object.entries(updates).forEach(([key, value]) => {
             if (key === 'stockCount') {
-                product.stockCount = Number(updates[key]);
+                product.stockCount = Number(value);
                 product.inStock = product.stockCount > 0;
             } else if (key === 'inStock') {
-                product.inStock = updates.inStock === 'true' || updates.inStock === true;
+                product.inStock = value === 'true' || value === true;
             } else if (key === 'fastDelivery') {
-                product.fastDelivery = updates.fastDelivery === 'true' || updates.fastDelivery === true;
+                product.fastDelivery = value === 'true' || value === true;
+            } else if (key === 'sizes') {
+                product.sizes = typeof value === 'string' ? value.split(',') : value;
+            } else if (key === 'productInfo') {
+                product.productInfo = typeof value === 'string' ? JSON.parse(value) : value;
             } else {
-                product[key] = updates[key];
+                product[key] = value;
             }
         });
 
         await product.save();
-        return sendResponse(res, 200, true, 'Product updated', product);
+        return sendResponse(res, 200, true, 'Product updated successfully', product);
     } catch (err) {
         console.error(err);
-        return sendResponse(res, 500, false, 'Server Error');
+        return sendResponse(res, 500, false, 'Server Error', err.message);
     }
 };
 
-// Delete product
+// ✅ Delete a product
 export const deleteProduct = async (req, res) => {
     try {
         const { id } = req.params;
         const product = await Product.findByIdAndDelete(id);
         if (!product) return sendResponse(res, 404, false, 'Product not found');
-        return sendResponse(res, 200, true, 'Product deleted', product);
+        return sendResponse(res, 200, true, 'Product deleted successfully', product);
     } catch (err) {
         console.error(err);
-        return sendResponse(res, 500, false, 'Server Error');
+        return sendResponse(res, 500, false, 'Server Error', err.message);
     }
 };
 
-// Search by title
+// ✅ Search products
 export const searchProducts = async (req, res) => {
     try {
         const { query } = req.query;
-        if (!query) return sendResponse(res, 400, false, 'Query is required');
+        if (!query) return sendResponse(res, 400, false, 'Search query is required');
 
         const products = await Product.find({
             title: { $regex: query, $options: 'i' }
@@ -112,35 +121,33 @@ export const searchProducts = async (req, res) => {
         return sendResponse(res, 200, true, 'Search results', products);
     } catch (err) {
         console.error(err);
-        return sendResponse(res, 500, false, 'Server Error');
+        return sendResponse(res, 500, false, 'Server Error', err.message);
     }
 };
 
-// Get by category
+// ✅ Get products by category
 export const getProductsByCategory = async (req, res) => {
     try {
         const { categoryId } = req.params;
         const products = await Product.find({ category: categoryId }).populate('category');
-        return sendResponse(res, 200, true, 'Products by category', products);
+        return sendResponse(res, 200, true, 'Products by category fetched', products);
     } catch (err) {
         console.error(err);
-        return sendResponse(res, 500, false, 'Server Error');
+        return sendResponse(res, 500, false, 'Server Error', err.message);
     }
 };
 
-// Get single product by ID
+// ✅ Get product by ID
 export const getProductById = async (req, res) => {
     try {
         const { id } = req.params;
         const product = await Product.findById(id).populate('category');
 
-        if (!product) {
-            return sendResponse(res, 404, false, 'Product not found');
-        }
+        if (!product) return sendResponse(res, 404, false, 'Product not found');
 
         return sendResponse(res, 200, true, 'Product fetched successfully', product);
     } catch (err) {
         console.error(err);
-        return sendResponse(res, 500, false, 'Server Error');
+        return sendResponse(res, 500, false, 'Server Error', err.message);
     }
 };

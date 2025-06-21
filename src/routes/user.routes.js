@@ -1,29 +1,33 @@
 import express from 'express';
-import upload from '../utils/multer.js'; // Ensure this stores in `/uploads/users/`
-import { createUser, getAllUsers, updateUser } from '../controllers/user.controller.js';
+import upload from '../utils/multer.js';
+import {
+    signupUser,
+    loginUser,
+    getAllUsers,
+    updateUser
+} from '../controllers/user.controller.js';
 
 const router = express.Router();
 
-router.post('/', upload.single('avatar'), createUser);
+router.post('/signup', signupUser);
+router.post('/login', loginUser);
 router.get('/', getAllUsers);
-router.put('/:id', upload.single('avatar'), updateUser);
+router.patch('/:id', upload.single('avatar'), updateUser);
 
 export default router;
-
 
 /**
  * @swagger
  * tags:
  *   name: Users
- *   description: User management APIs
+ *   description: User management and authentication
  */
-
 
 /**
  * @swagger
- * /api/users:
+ * /api/users/signup:
  *   post:
- *     summary: Create a new user
+ *     summary: Signup using phone number
  *     tags: [Users]
  *     requestBody:
  *       required: true
@@ -32,25 +36,41 @@ export default router;
  *           schema:
  *             type: object
  *             required:
- *               - fullName
- *               - email
+ *               - phone
  *             properties:
- *               fullName:
- *                 type: string
- *               email:
- *                 type: string
  *               phone:
  *                 type: string
- *               avatar:
- *                 type: string
- *               role:
- *                 type: string
- *                 enum: [user, admin]
- *               isBlocked:
- *                 type: boolean
+ *                 example: "9876543210"
  *     responses:
  *       201:
- *         description: User created
+ *         description: User signed up successfully
+ *       409:
+ *         description: User already exists
+ */
+
+/**
+ * @swagger
+ * /api/users/login:
+ *   post:
+ *     summary: Login using phone number
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - phone
+ *             properties:
+ *               phone:
+ *                 type: string
+ *                 example: "9876543210"
+ *     responses:
+ *       200:
+ *         description: User logged in successfully
+ *       404:
+ *         description: User not found
  */
 
 /**
@@ -61,27 +81,28 @@ export default router;
  *     tags: [Users]
  *     responses:
  *       200:
- *         description: List of all users
+ *         description: List of users
  */
-
 
 /**
  * @swagger
  * /api/users/{id}:
- *   put:
- *     summary: Update a user by ID
+ *   patch:
+ *     summary: Update user profile
  *     tags: [Users]
+ *     consumes:
+ *       - multipart/form-data
  *     parameters:
  *       - in: path
  *         name: id
- *         required: true
- *         description: The user ID
  *         schema:
  *           type: string
+ *         required: true
+ *         description: MongoDB user ID
  *     requestBody:
  *       required: false
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -89,17 +110,11 @@ export default router;
  *                 type: string
  *               email:
  *                 type: string
- *               role:
- *                 type: string
- *                 enum: [user, admin]
- *               isBlocked:
- *                 type: boolean
- *               phone:
- *                 type: string
  *               address:
  *                 type: string
  *               avatar:
  *                 type: string
+ *                 format: binary
  *     responses:
  *       200:
  *         description: User updated successfully

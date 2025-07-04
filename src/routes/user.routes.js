@@ -16,6 +16,7 @@ router.patch('/:id', upload.single('avatar'), updateUser);
 
 export default router;
 
+
 /**
  * @swagger
  * tags:

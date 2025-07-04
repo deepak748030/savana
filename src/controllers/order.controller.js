@@ -1,116 +1,138 @@
-import Order from '../models/product.model.js';
+import Order from '../models/product.order.model.js';
 import { sendResponse } from '../utils/sendResponse.js';
-import Product from '../models/product.model.js';
 
+// ✅ Create Order
 export const createOrder = async (req, res) => {
     try {
-        const { user, products, ...rest } = req.body;
+        const {
+            user,
+            products,
+            shippingAddress,
+            paymentMethod = 'cod',
+        } = req.body;
 
-        // Validate and populate each product's data
-        const populatedProducts = await Promise.all(
-            products.map(async (item) => {
-                const product = await Product.findById(item.product);
+        if (!user || !products || products.length === 0 || !shippingAddress) {
+            return sendResponse(res, 400, false, 'Missing required fields');
+        }
 
-                if (!product) throw new Error(`Product not found: ${item.product}`);
-
-                return {
-                    product: product._id,
-                    quantity: item.quantity,
-                    title: product.title,
-                    amount: product.amount,
-                    discountedAmount: product.discountedAmount,
-                    image: product.images?.[0] || null
-                };
-            })
-        );
-
-        // Create the order with populated product info
         const order = await Order.create({
             user,
-            products: populatedProducts,
-            ...rest
+            products,
+            shippingAddress,
+            paymentMethod,
+            paymentStatus: 'pending'
         });
 
-        sendResponse(res, 201, 'Order created', order);
+        return sendResponse(res, 201, true, 'Order created successfully', order);
     } catch (err) {
         console.error(err);
-        sendResponse(res, 500, 'Error creating order', err.message);
+        return sendResponse(res, 500, false, 'Failed to create order', err.message);
     }
 };
 
+// ✅ Get All Orders
 export const getAllOrders = async (req, res) => {
     try {
         const orders = await Order.find()
             .populate('user', 'name email')
-            .populate('products.product', 'title amount');
-        sendResponse(res, 200, 'Orders fetched', orders);
+            .populate('products.product')
+            .populate('products.productVariant');
+
+        return sendResponse(res, 200, true, 'Orders fetched successfully', orders);
     } catch (err) {
-        sendResponse(res, 500, 'Error fetching orders', err.message);
+        console.error(err);
+        return sendResponse(res, 500, false, 'Failed to fetch orders', err.message);
     }
 };
 
+// ✅ Get Order By ID
 export const getOrderById = async (req, res) => {
     try {
-        const order = await Order.findById(req.params.id)
+        const { id } = req.params;
+        const order = await Order.findById(id)
             .populate('user', 'name email')
-            .populate('products.product', 'title amount');
-        if (!order) return sendResponse(res, 404, 'Order not found');
-        sendResponse(res, 200, 'Order fetched', order);
+            .populate('products.product', 'title images')
+            .populate('products.productVariant');
+
+        if (!order) return sendResponse(res, 404, false, 'Order not found');
+
+        return sendResponse(res, 200, true, 'Order fetched successfully', order);
     } catch (err) {
-        sendResponse(res, 500, 'Error fetching order', err.message);
+        console.error(err);
+        return sendResponse(res, 500, false, 'Failed to fetch order', err.message);
     }
 };
 
+// ✅ Mark as Delivered
+export const markOrderDelivered = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const order = await Order.findById(id);
+
+        if (!order) return sendResponse(res, 404, false, 'Order not found');
+
+        order.isDelivered = true;
+        order.deliveredAt = new Date();
+        await order.save();
+
+        return sendResponse(res, 200, true, 'Order marked as delivered', order);
+    } catch (err) {
+        console.error(err);
+        return sendResponse(res, 500, false, 'Failed to update delivery status', err.message);
+    }
+};
+
+// ✅ Cancel Order
+export const cancelOrder = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const order = await Order.findById(id);
+
+        if (!order) return sendResponse(res, 404, false, 'Order not found');
+
+        order.isCancelled = true;
+        order.cancelledAt = new Date();
+        await order.save();
+
+        return sendResponse(res, 200, true, 'Order cancelled', order);
+    } catch (err) {
+        console.error(err);
+        return sendResponse(res, 500, false, 'Failed to cancel order', err.message);
+    }
+};
+
+// ✅ Delete Order
+export const deleteOrder = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const order = await Order.findByIdAndDelete(id);
+
+        if (!order) return sendResponse(res, 404, false, 'Order not found');
+
+        return sendResponse(res, 200, true, 'Order deleted successfully', order);
+    } catch (err) {
+        console.error(err);
+        return sendResponse(res, 500, false, 'Failed to delete order', err.message);
+    }
+};
+
+// ✅ Get Orders by User ID
 export const getOrdersByUserId = async (req, res) => {
     try {
         const { userId } = req.params;
 
         const orders = await Order.find({ user: userId })
-            .populate('products.product', 'title amount discountedAmount')
-            .sort({ createdAt: -1 });
+            .populate('user', 'name email')
+            .populate('products.product', 'title images')
+            .populate('products.productVariant', 'colorCode');
 
-        if (!orders.length) {
-            return sendResponse(res, 404, 'No orders found for this user');
+        if (!orders || orders.length === 0) {
+            return sendResponse(res, 404, false, 'No orders found for this user');
         }
 
-        return sendResponse(res, 200, 'User orders fetched successfully', orders);
-    } catch (error) {
-        console.error(error);
-        return sendResponse(res, 500, 'Failed to fetch orders');
-    }
-};
-
-export const updateOrderStatus = async (req, res) => {
-    try {
-        const { isDelivered, isCancelled, paymentStatus } = req.body;
-        const updateFields = {};
-        if (isDelivered !== undefined) {
-            updateFields.isDelivered = isDelivered;
-            updateFields.deliveredAt = isDelivered ? new Date() : null;
-        }
-        if (isCancelled !== undefined) {
-            updateFields.isCancelled = isCancelled;
-            updateFields.cancelledAt = isCancelled ? new Date() : null;
-        }
-        if (paymentStatus) updateFields.paymentStatus = paymentStatus;
-
-        const order = await Order.findByIdAndUpdate(req.params.id, updateFields, {
-            new: true
-        });
-
-        if (!order) return sendResponse(res, 404, 'Order not found');
-        sendResponse(res, 200, 'Order updated', order);
+        return sendResponse(res, 200, true, 'User orders fetched successfully', orders);
     } catch (err) {
-        sendResponse(res, 500, 'Error updating order', err.message);
-    }
-};
-
-export const deleteOrder = async (req, res) => {
-    try {
-        const order = await Order.findByIdAndDelete(req.params.id);
-        if (!order) return sendResponse(res, 404, 'Order not found');
-        sendResponse(res, 200, 'Order deleted');
-    } catch (err) {
-        sendResponse(res, 500, 'Error deleting order', err.message);
+        console.error(err);
+        return sendResponse(res, 500, false, 'Failed to fetch user orders', err.message);
     }
 };

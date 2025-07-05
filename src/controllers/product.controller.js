@@ -114,8 +114,16 @@ export const searchProducts = async (req, res) => {
         const { query } = req.query;
         if (!query) return sendResponse(res, 400, false, 'Search query is required');
 
+        const searchRegex = new RegExp(query, 'i');
         const products = await Product.find({
-            title: { $regex: query, $options: 'i' }
+            $or: [
+                { title: { $regex: searchRegex } },
+                { description: { $regex: searchRegex } },
+                { category: { $regex: searchRegex } },
+                { tag: { $regex: searchRegex } },
+                { amount: isNaN(query) ? undefined : Number(query) },
+                { discountedAmount: isNaN(query) ? undefined : Number(query) }
+            ]
         }).populate('category');
 
         return sendResponse(res, 200, true, 'Search results', products);

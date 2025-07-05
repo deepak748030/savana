@@ -53,6 +53,11 @@ const orderSchema = new mongoose.Schema(
             default: 'pending'
         },
 
+        totalAmount: {
+            type: Number,
+            required: true
+        },
+
         isDelivered: { type: Boolean, default: false },
         deliveredAt: { type: Date },
 

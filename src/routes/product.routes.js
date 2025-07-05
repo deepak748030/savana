@@ -22,6 +22,7 @@ router.get('/category/:categoryId', getProductsByCategory);
 
 export default router;
 
+
 /**
  * @swagger
  * tags:
@@ -43,6 +44,12 @@ export default router;
  *         multipart/form-data:
  *           schema:
  *             type: object
+ *             required:
+ *               - title
+ *               - description
+ *               - amount
+ *               - category
+ *               - stockCount
  *             properties:
  *               title:
  *                 type: string
@@ -54,7 +61,7 @@ export default router;
  *                 type: number
  *               category:
  *                 type: string
- *                 description: MongoDB category ObjectId
+ *                 description: MongoDB ObjectId for category
  *               stockCount:
  *                 type: number
  *               inStock:
@@ -68,7 +75,7 @@ export default router;
  *                 type: array
  *                 items:
  *                   type: string
- *                   example: "M"
+ *                   example: "L"
  *               productInfo:
  *                 type: array
  *                 items:
@@ -76,10 +83,8 @@ export default router;
  *                   properties:
  *                     title:
  *                       type: string
- *                       example: Fabric
  *                     content:
  *                       type: string
- *                       example: Flat Jersey
  *               images:
  *                 type: array
  *                 items:
@@ -111,12 +116,12 @@ export default router;
  *       - in: path
  *         name: id
  *         required: true
+ *         description: Product ID
  *         schema:
  *           type: string
- *         description: The product ID
  *     responses:
  *       200:
- *         description: Product details
+ *         description: Product details fetched
  *       404:
  *         description: Product not found
  */
@@ -133,9 +138,9 @@ export default router;
  *       - in: path
  *         name: id
  *         required: true
+ *         description: Product ID
  *         schema:
  *           type: string
- *         description: Product ID
  *     requestBody:
  *       required: false
  *       content:
@@ -181,7 +186,7 @@ export default router;
  *                   format: binary
  *     responses:
  *       200:
- *         description: Product updated
+ *         description: Product updated successfully
  */
 
 /**
@@ -194,12 +199,14 @@ export default router;
  *       - in: path
  *         name: id
  *         required: true
+ *         description: Product ID
  *         schema:
  *           type: string
- *         description: Product ID
  *     responses:
  *       200:
- *         description: Product deleted
+ *         description: Product deleted successfully
+ *       404:
+ *         description: Product not found
  */
 
 /**
@@ -211,13 +218,13 @@ export default router;
  *     parameters:
  *       - in: query
  *         name: query
+ *         required: true
  *         schema:
  *           type: string
- *         required: true
- *         description: Text to search in product titles
+ *         description: Search text to filter product titles
  *     responses:
  *       200:
- *         description: Search results
+ *         description: Search results returned
  */
 
 /**
@@ -232,8 +239,10 @@ export default router;
  *         required: true
  *         schema:
  *           type: string
- *         description: MongoDB category ID
+ *         description: MongoDB category ObjectId
  *     responses:
  *       200:
- *         description: Products in the given category
+ *         description: Products fetched for given category
+ *       404:
+ *         description: Category or products not found
  */

@@ -1,7 +1,8 @@
 import Order from '../models/product.order.model.js';
+import Product from '../models/product.model.js';
 import { sendResponse } from '../utils/sendResponse.js';
 
-// ✅ Create Order
+// ✅ Create Order with totalAmount calculation
 export const createOrder = async (req, res) => {
     try {
         const {
@@ -15,12 +16,26 @@ export const createOrder = async (req, res) => {
             return sendResponse(res, 400, false, 'Missing required fields');
         }
 
+        let totalAmount = 0;
+
+        // Calculate totalAmount based on product pricing
+        for (const item of products) {
+            const product = await Product.findById(item.product);
+            if (!product) {
+                return sendResponse(res, 404, false, `Product not found: ${item.product}`);
+            }
+
+            const price = product.discountedAmount ?? product.amount;
+            totalAmount += price * item.quantity;
+        }
+
         const order = await Order.create({
             user,
             products,
             shippingAddress,
             paymentMethod,
-            paymentStatus: 'pending'
+            paymentStatus: 'pending',
+            totalAmount
         });
 
         return sendResponse(res, 201, true, 'Order created successfully', order);

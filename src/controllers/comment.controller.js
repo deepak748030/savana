@@ -31,7 +31,9 @@ export const getCommentsByProductId = async (req, res) => {
     try {
         const { productId } = req.params;
 
-        const comments = await Comment.find({ productId }).sort({ createdAt: -1 });
+        const comments = await Comment.find({ productId })
+            .populate('userId', 'fullName avatar') // 🔥 Only fullName and avatar
+            .sort({ createdAt: -1 });
 
         return sendResponse(res, 200, true, 'Comments fetched successfully', comments);
     } catch (err) {

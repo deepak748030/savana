@@ -24,6 +24,13 @@ export const createProduct = async (req, res) => {
 
         const images = req.files?.map(file => `/uploads/${file.filename}`) || [];
 
+        // ✅ Clean sizes
+        const cleanSizes = Array.isArray(sizes)
+            ? sizes.map(s => s.replace(/[^a-zA-Z0-9]/g, '')).filter(Boolean)
+            : typeof sizes === 'string'
+                ? sizes.replace(/[\[\]\\"]/g, '').split(',').map(s => s.trim()).filter(Boolean)
+                : [];
+
         const product = await Product.create({
             title,
             description,
@@ -33,7 +40,7 @@ export const createProduct = async (req, res) => {
             stockCount: Number(stockCount),
             inStock: inStock === 'true' || inStock === true || Number(stockCount) > 0,
             fastDelivery: fastDelivery === 'true' || fastDelivery === true,
-            sizes: typeof sizes === 'string' ? sizes.split(',') : sizes,
+            sizes: cleanSizes,
             productInfo: typeof productInfo === 'string' ? JSON.parse(productInfo) : productInfo,
             tag,
             images
@@ -45,6 +52,7 @@ export const createProduct = async (req, res) => {
         return sendResponse(res, 500, false, 'Server Error', err.message);
     }
 };
+
 
 // ✅ Get all products
 export const getAllProducts = async (req, res) => {
@@ -70,7 +78,7 @@ export const updateProduct = async (req, res) => {
             product.images = req.files.map(file => `/uploads/${file.filename}`);
         }
 
-        Object.entries(updates).forEach(([key, value]) => {
+        for (const [key, value] of Object.entries(updates)) {
             if (key === 'stockCount') {
                 product.stockCount = Number(value);
                 product.inStock = product.stockCount > 0;
@@ -79,13 +87,20 @@ export const updateProduct = async (req, res) => {
             } else if (key === 'fastDelivery') {
                 product.fastDelivery = value === 'true' || value === true;
             } else if (key === 'sizes') {
-                product.sizes = typeof value === 'string' ? value.split(',') : value;
+                // ✅ Overwrite sizes with cleaned ones
+                const cleanSizes = Array.isArray(value)
+                    ? value.map(s => s.replace(/[^a-zA-Z0-9]/g, '')).filter(Boolean)
+                    : typeof value === 'string'
+                        ? value.replace(/[\[\]\\"]/g, '').split(',').map(s => s.trim()).filter(Boolean)
+                        : [];
+
+                product.sizes = cleanSizes;
             } else if (key === 'productInfo') {
                 product.productInfo = typeof value === 'string' ? JSON.parse(value) : value;
             } else {
                 product[key] = value;
             }
-        });
+        }
 
         await product.save();
         return sendResponse(res, 200, true, 'Product updated successfully', product);
@@ -94,6 +109,7 @@ export const updateProduct = async (req, res) => {
         return sendResponse(res, 500, false, 'Server Error', err.message);
     }
 };
+
 
 // ✅ Delete a product
 export const deleteProduct = async (req, res) => {

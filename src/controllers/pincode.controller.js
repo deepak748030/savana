@@ -30,6 +30,8 @@ export const updatePincode = async (req, res) => {
         const { id } = req.params;
         const { pincode } = req.body;
 
+        if (!pincode) return sendResponse(res, 400, false, 'Pincode is required for update');
+
         const updated = await Pincode.findByIdAndUpdate(id, { pincode }, { new: true });
         if (!updated) return sendResponse(res, 404, false, 'Pincode not found');
 

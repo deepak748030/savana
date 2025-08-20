@@ -31,10 +31,11 @@ router.post('/create-razorpay-order', async (req, res) => {
     }
 });
 
+console.log(process.env.RAZORPAY_KEY_SECRET)
 // Verify Razorpay payment
 router.post('/verify-razorpay-payment', (req, res) => {
+    console.log(process.env.RAZORPAY_KEY_SECRET)
     try {
-        console.log(RAZORPAY_KEY_SECRET)
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
         const body = razorpay_order_id + '|' + razorpay_payment_id;

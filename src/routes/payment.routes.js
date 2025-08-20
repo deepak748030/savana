@@ -24,6 +24,7 @@ router.post('/create-razorpay-order', async (req, res) => {
         };
 
         const order = await razorpay.orders.create(options);
+        console.log(order)
         return sendResponse(res, 200, true, 'Razorpay order created', order);
     } catch (error) {
         console.error('Razorpay order creation failed:', error);
@@ -34,10 +35,9 @@ router.post('/create-razorpay-order', async (req, res) => {
 console.log(process.env.RAZORPAY_KEY_SECRET)
 // Verify Razorpay payment
 router.post('/verify-razorpay-payment', (req, res) => {
-    console.log(process.env.RAZORPAY_KEY_SECRET)
     try {
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-
+        console.log(razorpay_order_id, razorpay_payment_id, razorpay_signature)
         const body = razorpay_order_id + '|' + razorpay_payment_id;
         const expectedSignature = crypto
             .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)

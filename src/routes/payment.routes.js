@@ -10,7 +10,7 @@ const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
-console.log(process.env.RAZORPAY_KEY_ID, process.env.RAZORPAY_KEY_SECRET);
+// console.log( process.env.RAZORPAY_KEY_ID, process.env.RAZORPAY_KEY_SECRET );
 
 // Create Razorpay order
 router.post('/create-razorpay-order', async (req, res) => {
@@ -34,15 +34,23 @@ router.post('/create-razorpay-order', async (req, res) => {
 // Verify Razorpay payment
 router.post('/verify-razorpay-payment', (req, res) => {
     try {
+        console.log(RAZORPAY_KEY_SECRET)
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
         const body = razorpay_order_id + '|' + razorpay_payment_id;
         const expectedSignature = crypto
             .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-            .update(body.toString())
+            .update(body)
             .digest('hex');
 
-        if (expectedSignature === razorpay_signature) {
+        // Use timingSafeEqual for secure comparison
+        const receivedSigBuffer = Buffer.from(razorpay_signature, 'hex');
+        const expectedSigBuffer = Buffer.from(expectedSignature, 'hex');
+        const isValid =
+            receivedSigBuffer.length === expectedSigBuffer.length &&
+            crypto.timingSafeEqual(receivedSigBuffer, expectedSigBuffer);
+
+        if (isValid) {
             return sendResponse(res, 200, true, 'Payment verified successfully');
         } else {
             return sendResponse(res, 400, false, 'Payment verification failed');

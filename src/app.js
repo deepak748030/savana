@@ -13,6 +13,7 @@ import ProductVariantRoutes from './routes/productVariant.route.js';
 import PosterRoutes from './routes/poster.routes.js';
 import commentRoutes from './routes/comment.routes.js';
 import PincodeRoutes from './routes/pincode.routes.js';
+import paymentRoutes from './routes/payment.routes.js';
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use('/api/product-variants', ProductVariantRoutes);
 app.use('/api/posters', PosterRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/pincodes', PincodeRoutes);
+app.use('/api/payment', paymentRoutes);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 export default app;

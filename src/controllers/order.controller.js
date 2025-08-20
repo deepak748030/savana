@@ -10,6 +10,9 @@ export const createOrder = async (req, res) => {
             products,
             shippingAddress,
             paymentMethod = 'cod',
+            paymentStatus = 'pending', // Add this
+            razorpayOrderId, // Add this
+            razorpayPaymentId, // Add this
         } = req.body;
 
         if (!user || !products || products.length === 0 || !shippingAddress) {
@@ -34,8 +37,10 @@ export const createOrder = async (req, res) => {
             products,
             shippingAddress,
             paymentMethod,
-            paymentStatus: 'pending',
-            totalAmount
+            paymentStatus,
+            totalAmount,
+            razorpayOrderId, // Add this
+            razorpayPaymentId, // Add this
         });
 
         return sendResponse(res, 201, true, 'Order created successfully', order);

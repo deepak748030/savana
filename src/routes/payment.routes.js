@@ -10,7 +10,6 @@ const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
-// console.log( process.env.RAZORPAY_KEY_ID, process.env.RAZORPAY_KEY_SECRET );
 
 // Create Razorpay order
 router.post('/create-razorpay-order', async (req, res) => {
@@ -18,7 +17,7 @@ router.post('/create-razorpay-order', async (req, res) => {
         const { amount } = req.body;
 
         const options = {
-            amount: amount, // amount in paise
+            amount: amount, // Amount in paise
             currency: 'INR',
             receipt: `receipt_${Date.now()}`,
         };
@@ -32,12 +31,11 @@ router.post('/create-razorpay-order', async (req, res) => {
     }
 });
 
-console.log(process.env.RAZORPAY_KEY_SECRET)
+
 // Verify Razorpay payment
 router.post('/verify-razorpay-payment', (req, res) => {
     try {
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-        console.log(razorpay_order_id, razorpay_payment_id, razorpay_signature)
         const body = razorpay_order_id + '|' + razorpay_payment_id;
         const expectedSignature = crypto
             .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)

@@ -142,4 +142,3 @@ export default router;
  *       200:
  *         description: Variant deleted successfully
  */
-

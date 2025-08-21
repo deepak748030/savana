@@ -1,8 +1,9 @@
 import Order from '../models/product.order.model.js';
 import Product from '../models/product.model.js';
+import shiprocketService from '../services/shiprocket.service.js';
 import { sendResponse } from '../utils/sendResponse.js';
 
-// ✅ Create Order with totalAmount calculation
+// ✅ Create Order with totalAmount calculation and Shiprocket integration
 export const createOrder = async (req, res) => {
     try {
         const {
@@ -10,9 +11,9 @@ export const createOrder = async (req, res) => {
             products,
             shippingAddress,
             paymentMethod = 'cod',
-            paymentStatus = 'pending', // Add this
-            razorpayOrderId, // Add this
-            razorpayPaymentId, // Add this
+            paymentStatus = 'pending',
+            razorpayOrderId,
+            razorpayPaymentId,
         } = req.body;
 
         if (!user || !products || products.length === 0 || !shippingAddress) {
@@ -39,9 +40,33 @@ export const createOrder = async (req, res) => {
             paymentMethod,
             paymentStatus,
             totalAmount,
-            razorpayOrderId, // Add this
-            razorpayPaymentId, // Add this
+            razorpayOrderId,
+            razorpayPaymentId,
         });
+
+        // Only attempt Shiprocket integration if order was created successfully
+        try {
+            // Populate user and product data for Shiprocket
+            const populatedOrder = await Order.findById(order._id)
+                .populate('user', 'name email')
+                .populate('products.product', 'title amount discountedAmount')
+                .populate('products.productVariant', 'sku');
+
+            const shiprocketResponse = await shiprocketService.createShipment(populatedOrder);
+
+            if (shiprocketResponse.success) {
+                // Store shiprocket order ID in our database
+                order.shiprocketOrderId = shiprocketResponse.data.shipment_id;
+                order.shiprocketOrderDate = shiprocketResponse.data.order_date;
+                await order.save();
+            } else {
+                console.warn('Shiprocket integration warning:', shiprocketResponse.message);
+                // Don't fail the order creation if Shiprocket fails
+            }
+        } catch (shiprocketError) {
+            console.error('Shiprocket integration error:', shiprocketError);
+            // Continue with order creation even if Shiprocket fails
+        }
 
         return sendResponse(res, 201, true, 'Order created successfully', order);
     } catch (err) {
@@ -154,5 +179,46 @@ export const getOrdersByUserId = async (req, res) => {
     } catch (err) {
         console.error(err);
         return sendResponse(res, 500, false, 'Failed to fetch user orders', err.message);
+    }
+};
+
+// ✅ Track Shipment via Shiprocket
+export const trackShipment = async (req, res) => {
+    try {
+        const { shippingId } = req.params;
+
+        if (!shippingId) {
+            return sendResponse(res, 400, false, 'Shipping ID is required');
+        }
+
+        const trackingResult = await shiprocketService.trackShipment(shippingId);
+
+        if (!trackingResult.success) {
+            return sendResponse(res, 400, false, trackingResult.message, trackingResult.error);
+        }
+
+        return sendResponse(res, 200, true, trackingResult.message, trackingResult.data);
+    } catch (err) {
+        console.error(err);
+        return sendResponse(res, 500, false, 'Failed to track shipment', err.message);
+    }
+};
+
+// ✅ Get Shiprocket Shipments
+export const getShiprocketShipments = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        const shipments = await shiprocketService.getShipments(page, limit);
+
+        if (!shipments.success) {
+            return sendResponse(res, 400, false, shipments.message, shipments.error);
+        }
+
+        return sendResponse(res, 200, true, shipments.message, shipments.data);
+    } catch (err) {
+        console.error(err);
+        return sendResponse(res, 500, false, 'Failed to retrieve shipments', err.message);
     }
 };

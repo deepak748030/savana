@@ -6,7 +6,9 @@ import {
     getOrdersByUserId,
     markOrderDelivered,
     cancelOrder,
-    deleteOrder
+    deleteOrder,
+    trackShipment,
+    getShiprocketShipments
 } from '../controllers/order.controller.js';
 
 const router = express.Router();
@@ -16,13 +18,15 @@ const router = express.Router();
  * tags:
  *   - name: Orders
  *     description: Order management endpoints
+ *   - name: Shiprocket
+ *     description: Shiprocket integration for order fulfillment and tracking
  */
 
 /**
  * @swagger
  * /api/product-orders:
  *   post:
- *     summary: Create a new order
+ *     summary: Create a new order (with automatic Shiprocket shipment creation)
  *     tags: [Orders]
  *     requestBody:
  *       required: true
@@ -193,6 +197,52 @@ const router = express.Router();
  *         description: Order deleted successfully
  */
 
+/**
+ * @swagger
+ * /api/product-orders/track/{shippingId}:
+ *   get:
+ *     summary: Track a shipment via Shiprocket
+ *     tags: [Shiprocket]
+ *     parameters:
+ *       - in: path
+ *         name: shippingId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Shiprocket Shipment ID
+ *     responses:
+ *       200:
+ *         description: Tracking information retrieved successfully
+ *       400:
+ *         description: Failed to retrieve tracking information
+ */
+
+/**
+ * @swagger
+ * /api/product-orders/shiprocket/shipments:
+ *   get:
+ *     summary: Get all shipments from Shiprocket
+ *     tags: [Shiprocket]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of records per page
+ *     responses:
+ *       200:
+ *         description: Shipments retrieved successfully
+ *       400:
+ *         description: Failed to retrieve shipments
+ */
+
 router.post('/', createOrder);
 router.get('/', getAllOrders);
 router.get('/:id', getOrderById);
@@ -200,5 +250,9 @@ router.get('/user/:userId', getOrdersByUserId);
 router.put('/:id/deliver', markOrderDelivered);
 router.put('/:id/cancel', cancelOrder);
 router.delete('/:id', deleteOrder);
+
+// Shiprocket tracking routes
+router.get('/track/:shippingId', trackShipment);
+router.get('/shiprocket/shipments', getShiprocketShipments);
 
 export default router;

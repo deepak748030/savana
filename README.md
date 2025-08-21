@@ -1,4 +1,3 @@
-
 # 🚀 Savana Ecommerce Backend
 
 <div align="center">
@@ -182,5 +181,3 @@ Full Stack Developer (MERN + DevOps)
 
 > ⭐ Star this repo if you found it useful!
 > 🔗 [https://github.com/deepak748030/savana](https://github.com/deepak748030/savana)
-
-

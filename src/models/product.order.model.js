@@ -63,8 +63,16 @@ const orderSchema = new mongoose.Schema(
 
         isCancelled: { type: Boolean, default: false },
         cancelledAt: { type: Date },
+        
         razorpayOrderId: { type: String },
         razorpayPaymentId: { type: String },
+        
+        // Shiprocket Integration Fields
+        shiprocketOrderId: { type: String },
+        shiprocketOrderDate: { type: String },
+        shiprocketShipmentId: { type: String },
+        shiprocketCourierId: { type: String },
+        shiprocketAWBNumber: { type: String }
     },
     { timestamps: true }
 );

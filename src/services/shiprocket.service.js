@@ -8,7 +8,10 @@ class ShiprocketService {
         this.baseUrl = process.env.SHIPROCKET_API_URL;
         this.email = process.env.SHIPROCKET_EMAIL;
         this.password = process.env.SHIPROCKET_PASSWORD;
+        this.pickupPincode = process.env.SHIPROCKET_PICKUP_PINCODE;
         this.token = null;
+        this.tokenExpiry = null; // To store token expiration timestamp
+
         this.axiosInstance = axios.create({
             baseURL: this.baseUrl,
             headers: {
@@ -20,24 +23,27 @@ class ShiprocketService {
     // Authenticate and get token
     async authenticate() {
         try {
-            const response = await this.axiosInstance.post('/v1/external/login', {
+            const response = await this.axiosInstance.post('/v1/external/auth/login', {
                 email: this.email,
                 password: this.password
             });
 
             this.token = response.data.token;
+            // Shiprocket tokens typically expire in 15 days (1296000 seconds).
+            // We'll set expiry to 14 days from now to ensure a refresh before actual expiration.
+            this.tokenExpiry = Date.now() + (14 * 24 * 60 * 60 * 1000); // 14 days in milliseconds
             this.axiosInstance.defaults.headers['Authorization'] = `Bearer ${this.token}`;
-            
+
             return this.token;
         } catch (error) {
-            console.error('Shiprocket authentication failed:', error.response?.data || error.message);
+            console.error('[ShiprocketService] Shiprocket authentication failed:', error.response?.data || error.message, 'Request config:', error.config); // Keep critical error logging
             throw new Error(`Shiprocket authentication failed: ${error.response?.data?.message || error.message}`);
         }
     }
 
-    // Ensure we have a valid token
+    // Ensure we have a valid token, refresh if expired or not present
     async ensureAuth() {
-        if (!this.token) {
+        if (!this.token || !this.tokenExpiry || Date.now() >= this.tokenExpiry) {
             await this.authenticate();
         }
     }
@@ -50,8 +56,8 @@ class ShiprocketService {
             const shipmentData = {
                 order_id: orderData._id.toString(),
                 order_date: new Date().toISOString().split('T')[0],
-                pickup_location: 'Default',
-                channel_id: "",
+                pickup_location: 'Default', // This might need to be dynamic
+                channel_id: "", // This might need to be dynamic
                 comment: "Order placed via ecommerce platform",
                 billing_customer_name: orderData.shippingAddress.fullName,
                 billing_last_name: "",
@@ -80,14 +86,14 @@ class ShiprocketService {
             };
 
             const response = await this.axiosInstance.post('/v1/external/orders/create/adhoc', shipmentData);
-            
+
             return {
                 success: true,
                 data: response.data,
                 message: 'Shipment created successfully'
             };
         } catch (error) {
-            console.error('Failed to create shipment:', error.response?.data || error.message);
+            console.error('Failed to create shipment:', error.response?.data || error.message); // Keep critical error logging
             return {
                 success: false,
                 error: error.response?.data || error.message,
@@ -111,7 +117,7 @@ class ShiprocketService {
                 message: 'Tracking information retrieved successfully'
             };
         } catch (error) {
-            console.error('Failed to track shipment:', error.response?.data || error.message);
+            console.error('Failed to track shipment:', error.response?.data || error.message); // Keep critical error logging
             return {
                 success: false,
                 error: error.response?.data || error.message,
@@ -135,11 +141,61 @@ class ShiprocketService {
                 message: 'Shipments retrieved successfully'
             };
         } catch (error) {
-            console.error('Failed to get shipments:', error.response?.data || error.message);
+            console.error('Failed to get shipments:', error.response?.data || error.message); // Keep critical error logging
             return {
                 success: false,
                 error: error.response?.data || error.message,
                 message: 'Failed to retrieve shipments'
+            };
+        }
+    }
+
+    // New method to check pincode serviceability and estimated delivery
+    async checkServiceability(deliveryPincode, options = {}) {
+        try {
+            await this.ensureAuth(); // Ensure token is valid and refreshed if needed
+
+            const {
+                pickup_postcode = this.pickupPincode, // Use configured pickup pincode from .env
+                cod = 1, // Default to COD enabled
+                weight = 0.5, // Default weight in kg
+                length = 15, // Default length in cm
+                breadth = 10, // Default breadth in cm
+                height = 5, // Default height in cm
+                declared_value = 50 // Default declared value
+            } = options;
+
+            if (!pickup_postcode) {
+                console.error('[ShiprocketService] SHIPROCKET_PICKUP_PINCODE is not configured in environment variables.'); // Keep critical error logging
+                throw new Error('Shiprocket pickup pincode is not configured in environment variables (SHIPROCKET_PICKUP_PINCODE).');
+            }
+
+            const requestParams = {
+                pickup_postcode,
+                delivery_postcode: deliveryPincode,
+                cod,
+                weight,
+                length,
+                breadth,
+                height,
+                declared_value
+            };
+
+            const response = await this.axiosInstance.get('/v1/external/courier/serviceability', {
+                params: requestParams
+            });
+
+            return {
+                success: true,
+                data: response.data,
+                message: 'Pincode serviceability checked successfully'
+            };
+        } catch (error) {
+            console.error('[ShiprocketService] Failed to check pincode serviceability:', error.response?.data || error.message, 'Request config:', error.config); // Keep critical error logging
+            return {
+                success: false,
+                error: error.response?.data || error.message,
+                message: 'Failed to check pincode serviceability with Shiprocket'
             };
         }
     }

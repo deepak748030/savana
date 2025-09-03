@@ -1,5 +1,6 @@
 import Pincode from '../models/pincode.model.js';
 import { sendResponse } from '../utils/sendResponse.js';
+import shiprocketService from '../services/shiprocket.service.js'; // Import the Shiprocket service
 
 // ✅ Create
 export const createPincode = async (req, res) => {
@@ -55,18 +56,36 @@ export const deletePincode = async (req, res) => {
     }
 };
 
-// ✅ Check if Pincode Available
+// ✅ Check if Pincode Available (Directly checks Shiprocket serviceability and returns estimated delivery days)
 export const checkPincodeAvailability = async (req, res) => {
     try {
         const { pincode } = req.body;
 
-        const exists = await Pincode.findOne({ pincode });
-        if (!exists) {
-            return sendResponse(res, 404, false, 'Pincode not available');
+        if (!pincode) {
+            return sendResponse(res, 400, false, 'Pincode is required');
         }
 
-        return sendResponse(res, 200, true, 'Pincode is available', exists);
+        // Directly call Shiprocket serviceability API, bypassing local Pincode model check
+        const serviceabilityResult = await shiprocketService.checkServiceability(pincode);
+
+        if (serviceabilityResult.success && serviceabilityResult.data && serviceabilityResult.data.data && serviceabilityResult.data.data.available_courier_companies.length > 0) {
+            const firstCourier = serviceabilityResult.data.data.available_courier_companies[0];
+            const estimatedDeliveryDays = firstCourier.estimated_delivery_days;
+
+            return sendResponse(res, 200, true, 'Pincode is serviceable', {
+                pincode: pincode,
+                estimatedDeliveryDays: estimatedDeliveryDays
+            });
+        } else {
+            // If no courier companies are available or Shiprocket API indicates non-serviceability
+            return sendResponse(res, 404, false, 'Pincode not serviceable by Shiprocket', {
+                pincode: pincode,
+                message: serviceabilityResult.message || 'No courier companies available for this pincode.'
+            });
+        }
+
     } catch (err) {
+        console.error('[PincodeController] Error in checkPincodeAvailability:', err.message, err.stack); // Keep critical error logging
         return sendResponse(res, 500, false, 'Check failed', err.message);
     }
 };

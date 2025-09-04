@@ -12,9 +12,10 @@ export const createOrder = async (req, res) => {
             shippingAddress,
             paymentMethod = 'cod',
             paymentStatus = 'pending',
+            orderStatus = 'pending', // New: Accept order status, default to 'pending'
             razorpayOrderId,
             razorpayPaymentId,
-            donationAmount = 0, // New: Accept donation amount
+            donationAmount = 0,
         } = req.body;
 
         if (!user || !products || products.length === 0 || !shippingAddress) {
@@ -43,8 +44,9 @@ export const createOrder = async (req, res) => {
             shippingAddress,
             paymentMethod,
             paymentStatus,
+            orderStatus, // New: Store order status
             totalAmount,
-            donationAmount, // New: Store donation amount
+            donationAmount,
             razorpayOrderId,
             razorpayPaymentId,
         });
@@ -113,6 +115,38 @@ export const getOrderById = async (req, res) => {
     }
 };
 
+// ✅ Update Order Status
+export const updateOrderStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { orderStatus } = req.body;
+
+        if (!orderStatus) {
+            return sendResponse(res, 400, false, 'Order status is required');
+        }
+
+        const order = await Order.findById(id);
+
+        if (!order) {
+            return sendResponse(res, 404, false, 'Order not found');
+        }
+
+        // Validate if the provided status is one of the allowed enum values
+        const allowedStatuses = ['pending', 'ordered', 'shipped', 'order delayed', 'delivered'];
+        if (!allowedStatuses.includes(orderStatus)) {
+            return sendResponse(res, 400, false, `Invalid order status. Allowed values are: ${allowedStatuses.join(', ')}`);
+        }
+
+        order.orderStatus = orderStatus;
+        await order.save();
+
+        return sendResponse(res, 200, true, 'Order status updated successfully', order);
+    } catch (err) {
+        console.error(err);
+        return sendResponse(res, 500, false, 'Failed to update order status', err.message);
+    }
+};
+
 // ✅ Mark as Delivered
 export const markOrderDelivered = async (req, res) => {
     try {
@@ -123,6 +157,7 @@ export const markOrderDelivered = async (req, res) => {
 
         order.isDelivered = true;
         order.deliveredAt = new Date();
+        order.orderStatus = 'delivered'; // Also update orderStatus to 'delivered'
         await order.save();
 
         return sendResponse(res, 200, true, 'Order marked as delivered', order);
@@ -142,6 +177,7 @@ export const cancelOrder = async (req, res) => {
 
         order.isCancelled = true;
         order.cancelledAt = new Date();
+        order.orderStatus = 'cancelled'; // Assuming 'cancelled' is a valid status, or you might want to add it to the enum
         await order.save();
 
         return sendResponse(res, 200, true, 'Order cancelled', order);

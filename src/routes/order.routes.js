@@ -8,7 +8,8 @@ import {
     cancelOrder,
     deleteOrder,
     trackShipment,
-    getShiprocketShipments
+    getShiprocketShipments,
+    updateOrderStatus // New: Import updateOrderStatus
 } from '../controllers/order.controller.js';
 
 const router = express.Router();
@@ -106,6 +107,11 @@ const router = express.Router();
  *                 format: float
  *                 example: 50.00
  *                 description: Optional amount donated for trees. Defaults to 0.
+ *               orderStatus:
+ *                 type: string
+ *                 enum: [pending, ordered, shipped, order delayed, delivered]
+ *                 example: ordered
+ *                 description: Current status of the order. Defaults to 'pending'.
  *     responses:
  *       201:
  *         description: Order created successfully
@@ -162,9 +168,45 @@ const router = express.Router();
 
 /**
  * @swagger
+ * /api/product-orders/{id}/status:
+ *   put:
+ *     summary: Update the status of an order
+ *     tags: [Orders]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Order ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - orderStatus
+ *             properties:
+ *               orderStatus:
+ *                 type: string
+ *                 enum: [pending, ordered, shipped, order delayed, delivered]
+ *                 example: shipped
+ *                 description: The new status for the order.
+ *     responses:
+ *       200:
+ *         description: Order status updated successfully
+ *       400:
+ *         description: Invalid order status or missing status
+ *       404:
+ *         description: Order not found
+ */
+
+/**
+ * @swagger
  * /api/product-orders/{id}/deliver:
  *   put:
- *     summary: Mark an order as delivered
+ *     summary: Mark an order as delivered (also updates orderStatus to 'delivered')
  *     tags: [Orders]
  *     parameters:
  *       - in: path
@@ -182,7 +224,7 @@ const router = express.Router();
  * @swagger
  * /api/product-orders/{id}/cancel:
  *   put:
- *     summary: Cancel an order
+ *     summary: Cancel an order (also updates orderStatus to 'cancelled')
  *     tags: [Orders]
  *     parameters:
  *       - in: path
@@ -264,6 +306,7 @@ router.post('/', createOrder);
 router.get('/', getAllOrders);
 router.get('/:id', getOrderById);
 router.get('/user/:userId', getOrdersByUserId);
+router.put('/:id/status', updateOrderStatus); // New route for updating order status
 router.put('/:id/deliver', markOrderDelivered);
 router.put('/:id/cancel', cancelOrder);
 router.delete('/:id', deleteOrder);

@@ -56,11 +56,18 @@ const orderSchema = new mongoose.Schema(
             default: 'pending'
         },
 
+        // New field for order status
+        orderStatus: {
+            type: String,
+            enum: ['pending', 'ordered', 'shipped', 'order delayed', 'delivered'],
+            default: 'pending'
+        },
+
         totalAmount: {
             type: Number,
             required: true
         },
-        // New field for tree donation
+        // Field for tree donation
         donationAmount: {
             type: Number,
             default: 0

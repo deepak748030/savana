@@ -14,6 +14,7 @@ export const createOrder = async (req, res) => {
             paymentStatus = 'pending',
             razorpayOrderId,
             razorpayPaymentId,
+            donationAmount = 0, // New: Accept donation amount
         } = req.body;
 
         if (!user || !products || products.length === 0 || !shippingAddress) {
@@ -33,6 +34,9 @@ export const createOrder = async (req, res) => {
             totalAmount += price * item.quantity;
         }
 
+        // Add donation amount to totalAmount
+        totalAmount += donationAmount;
+
         const order = await Order.create({
             user,
             products,
@@ -40,6 +44,7 @@ export const createOrder = async (req, res) => {
             paymentMethod,
             paymentStatus,
             totalAmount,
+            donationAmount, // New: Store donation amount
             razorpayOrderId,
             razorpayPaymentId,
         });

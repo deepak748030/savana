@@ -38,7 +38,10 @@ const orderSchema = new mongoose.Schema(
             address: { type: String, required: true },
             city: { type: String, required: true },
             state: { type: String, required: true },
-            postalCode: { type: String, required: true }
+            postalCode: { type: String, required: true },
+            Landmark: { type: String, required: false },
+            AlternateMobile: { type: String, required: false },
+            Email: { type: String, required: false }
         },
 
         paymentMethod: {
@@ -57,16 +60,21 @@ const orderSchema = new mongoose.Schema(
             type: Number,
             required: true
         },
+        // New field for tree donation
+        donationAmount: {
+            type: Number,
+            default: 0
+        },
 
         isDelivered: { type: Boolean, default: false },
         deliveredAt: { type: Date },
 
         isCancelled: { type: Boolean, default: false },
         cancelledAt: { type: Date },
-        
+
         razorpayOrderId: { type: String },
         razorpayPaymentId: { type: String },
-        
+
         // Shiprocket Integration Fields
         shiprocketOrderId: { type: String },
         shiprocketOrderDate: { type: String },

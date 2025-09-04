@@ -85,10 +85,27 @@ const router = express.Router();
  *                   postalCode:
  *                     type: string
  *                     example: "462001"
+ *                   Landmark:
+ *                     type: string
+ *                     example: "Near City Hospital"
+ *                     description: Optional landmark for shipping address
+ *                   AlternateMobile:
+ *                     type: string
+ *                     example: "9988776655"
+ *                     description: Optional alternate mobile number for shipping address
+ *                   Email:
+ *                     type: string
+ *                     example: "deepak.kushwah@example.com"
+ *                     description: Optional email for shipping address
  *               paymentMethod:
  *                 type: string
  *                 enum: [cod, razorpay, stripe, paypal]
  *                 example: razorpay
+ *               donationAmount:
+ *                 type: number
+ *                 format: float
+ *                 example: 50.00
+ *                 description: Optional amount donated for trees. Defaults to 0.
  *     responses:
  *       201:
  *         description: Order created successfully

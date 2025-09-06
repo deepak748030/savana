@@ -79,15 +79,15 @@ const orderSchema = new mongoose.Schema(
         isCancelled: { type: Boolean, default: false },
         cancelledAt: { type: Date },
 
-        razorpayOrderId: { type: String },
-        razorpayPaymentId: { type: String },
+        razorpayOrderId: { type: String, default: null },
+        razorpayPaymentId: { type: String, default: null },
 
         // Shiprocket Integration Fields
-        shiprocketOrderId: { type: String },
-        shiprocketOrderDate: { type: String },
-        shiprocketShipmentId: { type: String },
-        shiprocketCourierId: { type: String },
-        shiprocketAWBNumber: { type: String }
+        shiprocketOrderId: { type: String, default: null },
+        shiprocketOrderDate: { type: String, default: null },
+        shiprocketShipmentId: { type: String, default: null },
+        shiprocketCourierId: { type: String, default: null },
+        shiprocketAWBNumber: { type: String, default: null },
     },
     { timestamps: true }
 );

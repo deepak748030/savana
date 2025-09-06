@@ -147,6 +147,41 @@ export const updateOrderStatus = async (req, res) => {
     }
 };
 
+
+// ✅ Update only Shiprocket fields
+export const updateShiprocketDetails = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const {
+            shiprocketOrderId,
+            shiprocketOrderDate,
+            shiprocketShipmentId,
+            shiprocketCourierId,
+            shiprocketAWBNumber
+        } = req.body;
+
+        const order = await Order.findById(id);
+        if (!order) {
+            return sendResponse(res, 404, false, 'Order not found');
+        }
+
+        // Update only shiprocket fields
+        order.shiprocketOrderId = shiprocketOrderId ?? order.shiprocketOrderId;
+        order.shiprocketOrderDate = shiprocketOrderDate ?? order.shiprocketOrderDate;
+        order.shiprocketShipmentId = shiprocketShipmentId ?? order.shiprocketShipmentId;
+        order.shiprocketCourierId = shiprocketCourierId ?? order.shiprocketCourierId;
+        order.shiprocketAWBNumber = shiprocketAWBNumber ?? order.shiprocketAWBNumber;
+
+        await order.save();
+
+        return sendResponse(res, 200, true, 'Shiprocket details updated successfully', order);
+    } catch (err) {
+        console.error(err);
+        return sendResponse(res, 500, false, 'Failed to update Shiprocket details', err.message);
+    }
+};
+
+
 // ✅ Mark as Delivered
 export const markOrderDelivered = async (req, res) => {
     try {

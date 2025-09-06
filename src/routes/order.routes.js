@@ -9,7 +9,8 @@ import {
     deleteOrder,
     trackShipment,
     getShiprocketShipments,
-    updateOrderStatus // New: Import updateOrderStatus
+    updateOrderStatus, // New: Import updateOrderStatus
+    updateShiprocketDetails
 } from '../controllers/order.controller.js';
 
 const router = express.Router();
@@ -309,7 +310,9 @@ router.get('/user/:userId', getOrdersByUserId);
 router.put('/:id/status', updateOrderStatus); // New route for updating order status
 router.put('/:id/deliver', markOrderDelivered);
 router.put('/:id/cancel', cancelOrder);
+router.put('/:id/shiprocket', updateShiprocketDetails);
 router.delete('/:id', deleteOrder);
+
 
 // Shiprocket tracking routes
 router.get('/track/:shippingId', trackShipment);

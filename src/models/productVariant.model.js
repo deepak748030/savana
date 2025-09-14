@@ -12,8 +12,8 @@ const productVariantSchema = new mongoose.Schema({
     },
     price: {
         type: Number,
-        required: true,
-        default: 0
+        required: false,
+        // default: 0
     },
     images: [{
         type: String

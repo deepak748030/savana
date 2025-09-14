@@ -4,11 +4,15 @@ import { sendResponse } from '../utils/sendResponse.js';
 // Create
 export const createProductVariant = async (req, res) => {
     try {
-        const { productId, colorCode, price } = req.body;
+        let { productId, colorCode, price } = req.body;
+
         if (!productId || !colorCode || price === undefined) {
             return sendResponse(res, 400, false, 'productId, colorCode, and price are required');
         }
-        if (typeof price !== 'number' || price < 0) {
+
+        // Convert price to number if it's a string
+        price = Number(price);
+        if (isNaN(price) || price < 0) {
             return sendResponse(res, 400, false, 'Price must be a non-negative number');
         }
 
@@ -48,13 +52,17 @@ export const getVariantById = async (req, res) => {
 export const updateVariant = async (req, res) => {
     try {
         const { id } = req.params;
-        const updates = req.body;
+        const updates = { ...req.body };
 
         const variant = await ProductVariant.findById(id);
         if (!variant) return sendResponse(res, 404, false, 'Variant not found');
 
-        if (updates.price !== undefined && (typeof updates.price !== 'number' || updates.price < 0)) {
-            return sendResponse(res, 400, false, 'Price must be a non-negative number');
+        // Convert price if exists
+        if (updates.price !== undefined) {
+            updates.price = Number(updates.price);
+            if (isNaN(updates.price) || updates.price < 0) {
+                return sendResponse(res, 400, false, 'Price must be a non-negative number');
+            }
         }
 
         if (req.files?.length > 0) {

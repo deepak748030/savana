@@ -4,14 +4,17 @@ import { sendResponse } from '../utils/sendResponse.js';
 // Create
 export const createProductVariant = async (req, res) => {
     try {
-        const { productId, colorCode } = req.body;
-        if (!productId || !colorCode) {
-            return sendResponse(res, 400, false, 'productId and colorCode are required');
+        const { productId, colorCode, price } = req.body;
+        if (!productId || !colorCode || price === undefined) {
+            return sendResponse(res, 400, false, 'productId, colorCode, and price are required');
+        }
+        if (typeof price !== 'number' || price < 0) {
+            return sendResponse(res, 400, false, 'Price must be a non-negative number');
         }
 
         const images = req.files?.map(file => `/uploads/${file.filename}`) || [];
 
-        const variant = await ProductVariant.create({ productId, colorCode, images });
+        const variant = await ProductVariant.create({ productId, colorCode, price, images });
         return sendResponse(res, 201, true, 'Variant created successfully', variant);
     } catch (error) {
         return sendResponse(res, 500, false, 'Error creating variant', error.message);
@@ -49,6 +52,10 @@ export const updateVariant = async (req, res) => {
 
         const variant = await ProductVariant.findById(id);
         if (!variant) return sendResponse(res, 404, false, 'Variant not found');
+
+        if (updates.price !== undefined && (typeof updates.price !== 'number' || updates.price < 0)) {
+            return sendResponse(res, 400, false, 'Price must be a non-negative number');
+        }
 
         if (req.files?.length > 0) {
             variant.images = req.files.map(file => `/uploads/${file.filename}`);

@@ -4,7 +4,7 @@ import { sendResponse } from '../utils/sendResponse.js';
 // Create
 export const createProductVariant = async (req, res) => {
     try {
-        let { productId, colorCode, price } = req.body;
+        let { productId, colorCode, price, discountedPrice } = req.body;
 
         if (!productId || !colorCode || price === undefined) {
             return sendResponse(res, 400, false, 'productId, colorCode, and price are required');
@@ -16,9 +16,24 @@ export const createProductVariant = async (req, res) => {
             return sendResponse(res, 400, false, 'Price must be a non-negative number');
         }
 
+        // Convert discountedPrice if provided
+        if (discountedPrice !== undefined) {
+            discountedPrice = Number(discountedPrice);
+            if (isNaN(discountedPrice) || discountedPrice < 0) {
+                return sendResponse(res, 400, false, 'Discounted price must be a non-negative number');
+            }
+        }
+
         const images = req.files?.map(file => `/uploads/${file.filename}`) || [];
 
-        const variant = await ProductVariant.create({ productId, colorCode, price, images });
+        const variant = await ProductVariant.create({
+            productId,
+            colorCode,
+            price,
+            discountedPrice,
+            images
+        });
+
         return sendResponse(res, 201, true, 'Variant created successfully', variant);
     } catch (error) {
         return sendResponse(res, 500, false, 'Error creating variant', error.message);
@@ -62,6 +77,14 @@ export const updateVariant = async (req, res) => {
             updates.price = Number(updates.price);
             if (isNaN(updates.price) || updates.price < 0) {
                 return sendResponse(res, 400, false, 'Price must be a non-negative number');
+            }
+        }
+
+        // Convert discountedPrice if exists
+        if (updates.discountedPrice !== undefined) {
+            updates.discountedPrice = Number(updates.discountedPrice);
+            if (isNaN(updates.discountedPrice) || updates.discountedPrice < 0) {
+                return sendResponse(res, 400, false, 'Discounted price must be a non-negative number');
             }
         }
 

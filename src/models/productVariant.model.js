@@ -13,7 +13,12 @@ const productVariantSchema = new mongoose.Schema({
     price: {
         type: Number,
         required: false,
-        // default: 0
+        default: 0
+    },
+    discountedPrice: {
+        type: Number,
+        required: false,
+        default: 0
     },
     images: [{
         type: String
